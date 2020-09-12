@@ -15,12 +15,15 @@ python3 main.py
 ```
 ## Make the labels
 You now have a csv containing the numbers and codes. 
+### Using gLabels
 Install gLabels on Ubuntu:
 ```
 sudo apt-get install glabels
 ```
 Open it, create a new file and choose your label format (or create your own one if it doesn't exist yet for your brand).
 Choose "Edit merge properties" at the second row of the top bar in gLabels and select the generated `codes.csv` file (as a CSV file with keys on line 1). Now, you can create a text box. When editting the text field (on the right), you can "Insert merge field", being the `lidnr` and `code`. Design your label and hit print. (Note: First print one sheet on normal paper, to be sure everything is aligned right for the stickers)
+### Using word
+An explanation can be found [here](https://support.microsoft.com/nl-nl/office/etiketten-voor-de-adressenlijst-afdrukken-276a2cd1-74d2-43d0-ab5a-b90460358ad5).
 ## The old way
 This method has a few problems, so it's recommended to use gLabels.
 In `main.py`, set `GENERATE_ODT` to `TRUE` and run the script. 

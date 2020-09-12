@@ -1,14 +1,22 @@
-from jinja2 import Environment, FileSystemLoader
+GENERATE_ODT = False  # Set to true if you don't want to use gLabels
+
 import os
-import zipfile
+
+if GENERATE_ODT:
+    from jinja2 import Environment, FileSystemLoader
+    import zipfile
+
 import re
 
-# Create a list with the codes from the file
-# Note: This file should contain the codes somewhere between parentheses
-with open("codes.txt", "r") as file:
-    data = file.read()
-data_codes = re.findall(r"\([A-Z0-9]+\)", data)
-codes = [code[1:-1] for code in data_codes]  # remove parentheses
+
+def get_code_list(filename="codes.txt"):
+    # Create a list with the codes from the file
+    # Note: This file should contain the codes somewhere between parentheses
+    with open(filename, "r") as file:
+        data = file.read()
+    data_codes = re.findall(r"\([A-Z0-9]+\)", data)
+    codes = [code[1:-1] for code in data_codes]  # remove parentheses
+    return codes
 
 
 # Groups codes per 3 with their corresponding number (one row in the sticker sheet)
@@ -35,17 +43,6 @@ def make_trios(codes):
     return trios
 
 
-# Render the template
-env = Environment(loader=FileSystemLoader('templates'))
-template = env.get_template('template - content.xml')
-trios = make_trios(codes)
-output_from_parsed_template = template.render(codes=trios)
-
-# Write out the result
-with open("odt/content.xml", "w+") as f:
-    f.write(output_from_parsed_template)
-
-
 # Zip the contents
 def zipdir(path, ziph):
     # src: https://stackoverflow.com/questions/42055873/zip-only-contents-of-directory-exclude-parent-python
@@ -59,6 +56,38 @@ def zipdir(path, ziph):
             ziph.write(os.path.join(root, file), os.path.join(folder, file))
 
 
-zipf = zipfile.ZipFile('Stickers.odt', 'w', zipfile.ZIP_DEFLATED)
-zipdir('odt/', zipf)
-zipf.close()
+def create_codes_csv(codes):
+    output = "lidnr,code\n"
+    lidnr = 1
+    for code in codes:
+        output += f"{lidnr},{code}\n"
+        lidnr += 1
+    with open("codes.csv", "w+") as f:
+        f.write(output)
+
+
+def create_odt_file(codes, filename="Stickers.odt", template="template - content.xml"):
+    # Render the template
+    env = Environment(loader=FileSystemLoader('templates'))
+    template = env.get_template(template)
+    trios = make_trios(codes)
+    output_from_parsed_template = template.render(codes=trios)
+
+    # Write out the result
+    with open("odt/content.xml", "w+") as f:
+        f.write(output_from_parsed_template)
+
+    zipf = zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED)
+    zipdir('odt/', zipf)
+    zipf.close()
+
+
+def main():
+    codes = get_code_list()
+    create_codes_csv(codes)
+    if GENERATE_ODT:
+        create_odt_file(codes)
+
+
+if __name__ == '__main__':
+    main()
